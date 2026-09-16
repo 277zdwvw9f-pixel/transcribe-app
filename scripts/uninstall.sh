@@ -31,8 +31,6 @@ echo ""
 echo -e "${BLUE}📋 Что будет удалено:${NC}"
 echo ""
 
-TOTAL_SIZE=0
-
 # Проверяем размер установленных компонентов
 if [ -d "$INSTALL_DIR" ]; then
     SIZE=$(du -sh "$INSTALL_DIR" 2>/dev/null | cut -f1)
@@ -45,6 +43,11 @@ fi
 if [ -d "$WORKFLOW_PATH" ]; then
     echo "  ✓ Quick Action (контекстное меню)"
     echo "    Путь: $WORKFLOW_PATH"
+    echo ""
+fi
+
+if [ -x "$INSTALL_DIR/gigaam/venv/bin/python" ]; then
+    echo "  ✓ GigaAM v3 (Python-окружение и модель — внутри папки приложения)"
     echo ""
 fi
 
