@@ -558,6 +558,14 @@ cat > "$WORKFLOW_PATH/Contents/Info.plist" << EOF
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>CFBundleIdentifier</key>
+    <string>com.mok.transcribe.quickaction</string>
+    <key>CFBundleName</key>
+    <string>Транскрибировать</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>ru_RU</string>
     <key>NSServices</key>
     <array>
         <dict>
@@ -591,12 +599,28 @@ cat > "$WORKFLOW_PATH/Contents/Info.plist" << EOF
 </plist>
 EOF
 
-# document.wflow для workflow
+# document.wflow для workflow.
+# ВАЖНО: это должен быть ПОЛНЫЙ документ Automator, а не только массив actions.
+# Finder запускает Службу через строгий WorkflowServiceRunner, который падает с
+# assertion (AMWorkflowServiceRunner.m) на неполном документе — пункт меню виден,
+# но клик молча ничего не делает. Обязательны: AMDocumentVersion, метаданные
+# действия (Class Name, BundleIdentifier, UUID и пр.) и workflowMetaData с
+# workflowTypeIdentifier = com.apple.Automator.servicesMenu. (BUG: правый клик Finder.)
+WF_IN_UUID="$(uuidgen)"
+WF_OUT_UUID="$(uuidgen)"
+WF_ACT_UUID="$(uuidgen)"
+
 cat > "$WORKFLOW_PATH/Contents/document.wflow" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>AMApplicationBuild</key>
+    <string>528</string>
+    <key>AMApplicationVersion</key>
+    <string>2.10</string>
+    <key>AMDocumentVersion</key>
+    <string>2</string>
     <key>actions</key>
     <array>
         <dict>
@@ -606,9 +630,39 @@ cat > "$WORKFLOW_PATH/Contents/document.wflow" << EOF
                 <dict>
                     <key>Container</key>
                     <string>List</string>
+                    <key>Optional</key>
+                    <true/>
                     <key>Types</key>
                     <array>
-                        <string>com.apple.cocoa.path</string>
+                        <string>com.apple.cocoa.string</string>
+                    </array>
+                </dict>
+                <key>AMActionVersion</key>
+                <string>2.0.3</string>
+                <key>AMApplication</key>
+                <array>
+                    <string>Automator</string>
+                </array>
+                <key>AMParameterProperties</key>
+                <dict>
+                    <key>COMMAND_STRING</key>
+                    <dict/>
+                    <key>CheckedForUserDefaultShell</key>
+                    <dict/>
+                    <key>inputMethod</key>
+                    <dict/>
+                    <key>shell</key>
+                    <dict/>
+                    <key>source</key>
+                    <dict/>
+                </dict>
+                <key>AMProvides</key>
+                <dict>
+                    <key>Container</key>
+                    <string>List</string>
+                    <key>Types</key>
+                    <array>
+                        <string>com.apple.cocoa.string</string>
                     </array>
                 </dict>
                 <key>ActionBundlePath</key>
@@ -620,7 +674,7 @@ cat > "$WORKFLOW_PATH/Contents/document.wflow" << EOF
                     <key>COMMAND_STRING</key>
                     <string>for f in "\$@"
 do
-    "$HOME/Library/Application Support/Transcribe/bin/transcribe.sh" "\$f"
+    "\$HOME/Library/Application Support/Transcribe/bin/transcribe.sh" "\$f"
 done</string>
                     <key>CheckedForUserDefaultShell</key>
                     <true/>
@@ -631,9 +685,150 @@ done</string>
                     <key>source</key>
                     <string></string>
                 </dict>
+                <key>BundleIdentifier</key>
+                <string>com.apple.Automator.RunShellScript</string>
+                <key>CFBundleVersion</key>
+                <string>2.0.3</string>
+                <key>CanShowSelectedItemsWhenRun</key>
+                <false/>
+                <key>CanShowWhenRun</key>
+                <true/>
+                <key>Category</key>
+                <array>
+                    <string>AMCategoryUtilities</string>
+                </array>
+                <key>Class Name</key>
+                <string>RunShellScriptAction</string>
+                <key>InputUUID</key>
+                <string>${WF_IN_UUID}</string>
+                <key>Keywords</key>
+                <array>
+                    <string>Shell</string>
+                    <string>Script</string>
+                    <string>Command</string>
+                    <string>Run</string>
+                    <string>Unix</string>
+                </array>
+                <key>OutputUUID</key>
+                <string>${WF_OUT_UUID}</string>
+                <key>UUID</key>
+                <string>${WF_ACT_UUID}</string>
+                <key>UnlocalizedApplications</key>
+                <array>
+                    <string>Automator</string>
+                </array>
+                <key>arguments</key>
+                <dict>
+                    <key>0</key>
+                    <dict>
+                        <key>default value</key>
+                        <integer>0</integer>
+                        <key>name</key>
+                        <string>inputMethod</string>
+                        <key>required</key>
+                        <string>0</string>
+                        <key>type</key>
+                        <string>0</string>
+                        <key>uuid</key>
+                        <string>0</string>
+                    </dict>
+                    <key>1</key>
+                    <dict>
+                        <key>default value</key>
+                        <false/>
+                        <key>name</key>
+                        <string>CheckedForUserDefaultShell</string>
+                        <key>required</key>
+                        <string>0</string>
+                        <key>type</key>
+                        <string>0</string>
+                        <key>uuid</key>
+                        <string>1</string>
+                    </dict>
+                    <key>2</key>
+                    <dict>
+                        <key>default value</key>
+                        <string></string>
+                        <key>name</key>
+                        <string>source</string>
+                        <key>required</key>
+                        <string>0</string>
+                        <key>type</key>
+                        <string>0</string>
+                        <key>uuid</key>
+                        <string>2</string>
+                    </dict>
+                    <key>3</key>
+                    <dict>
+                        <key>default value</key>
+                        <string>/bin/sh</string>
+                        <key>name</key>
+                        <string>shell</string>
+                        <key>required</key>
+                        <string>0</string>
+                        <key>type</key>
+                        <string>0</string>
+                        <key>uuid</key>
+                        <string>3</string>
+                    </dict>
+                    <key>4</key>
+                    <dict>
+                        <key>default value</key>
+                        <string></string>
+                        <key>name</key>
+                        <string>COMMAND_STRING</string>
+                        <key>required</key>
+                        <string>0</string>
+                        <key>type</key>
+                        <string>0</string>
+                        <key>uuid</key>
+                        <string>4</string>
+                    </dict>
+                </dict>
+                <key>isViewVisible</key>
+                <integer>1</integer>
+                <key>location</key>
+                <string>309.000000:253.000000</string>
+                <key>nib name</key>
+                <string>WorkflowasServiceViewController</string>
             </dict>
+            <key>isViewVisible</key>
+            <integer>1</integer>
         </dict>
     </array>
+    <key>connectors</key>
+    <dict/>
+    <key>workflowMetaData</key>
+    <dict>
+        <key>applicationBundleIDsByPath</key>
+        <dict/>
+        <key>applicationPaths</key>
+        <array/>
+        <key>inputTypeIdentifier</key>
+        <string>com.apple.Automator.fileSystemObject</string>
+        <key>outputTypeIdentifier</key>
+        <string>com.apple.Automator.nothing</string>
+        <key>presentationMode</key>
+        <integer>11</integer>
+        <key>processesInput</key>
+        <integer>0</integer>
+        <key>serviceApplicationBundleID</key>
+        <string>com.apple.finder</string>
+        <key>serviceApplicationPath</key>
+        <string>/System/Library/CoreServices/Finder.app</string>
+        <key>serviceInputTypeIdentifier</key>
+        <string>com.apple.Automator.fileSystemObject</string>
+        <key>serviceOutputTypeIdentifier</key>
+        <string>com.apple.Automator.nothing</string>
+        <key>serviceProcessesInput</key>
+        <integer>0</integer>
+        <key>systemImageName</key>
+        <string>NSActionTemplate</string>
+        <key>useAutomaticInputType</key>
+        <integer>0</integer>
+        <key>workflowTypeIdentifier</key>
+        <string>com.apple.Automator.servicesMenu</string>
+    </dict>
 </dict>
 </plist>
 EOF
